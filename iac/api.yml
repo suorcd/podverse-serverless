@@ -1,14 +1,25 @@
-
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  CodeBucket:
+    Description: S3 bucket to hold the Lambda code
+    Type: String
+  LambdaZip:
+    Description: File name of the zipped lambda
+    Type: String
+  LabmdaRuntime:
+    Type: String
+    Default: 'nodejs18.x'
+    AllowedValues: ['nodejs18.x', 'nodejs20.x']
 Resources:
   HandlerLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: ryan-lambda-code
-        S3Key: index.zip
+        S3Bucket: !Sub CodeBucket
+        S3Key: !Sub LambdaZip
       Handler: index.handler
       Role: !GetAtt LambdaFunctionRole.Arn
-      Runtime: nodejs18.x
+      Runtime: !Sub LabmdaRuntime
 
   # Creates a single-route (wildcard) HTTP API for our Lambda function.
   HttpApi:
