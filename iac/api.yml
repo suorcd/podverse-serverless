@@ -1,11 +1,9 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
-  CodeBucket:
-    Description: S3 bucket to hold the Lambda code
-    Type: String
   LambdaZip:
     Description: File name of the zipped lambda
     Type: String
+    Default: 'index.zip'
   LabmdaRuntime:
     Type: String
     Default: 'nodejs18.x'
@@ -77,6 +75,22 @@ Resources:
             - logs:CreateLogStream
             - logs:PutLogEvents
             Resource: "*"
+
+
+  LambdaBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref LambdaBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: 
+            - "s3:PutObject"
+            - "s3:GetObject"
+            Effect: "Allow"
+            Principal:
+              AWS: !GetAtt LambdaFunctionRole.Arn
+            Resource: !Sub "arn:aws:s3:::${LambdaBucket}/*"
 
   # Allows API Gateway to call our Lambda function.
   HandlerLambdaPermissionHttpApi:
