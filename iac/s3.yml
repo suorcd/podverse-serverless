@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  CodeBucketVersionRetention:
+    Description: How many days to keep versions.
+    Type: String
+    Default: 1
+    AllowedValues: ['1', '5','10']
+  S3RuleStatus:
+    Description: 'S3 Bucket Rule Status'
+    Type: String
+    Default: 'Enabled'
+    AllowedValues: ['Enabled', 'Disabled']
+Resources:
+  LogBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+  LogBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref LogBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+            - "s3:PutObject"
+            Effect: "Allow"
+            Principal:
+              AWS: !Ref AWS::AccountId
+            Resource: !Sub "arn:aws:s3:::${LogBucket}/*"
+  LambdaBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: !Ref CodeBucketVersionRetention
+            Status: !Ref S3RuleStatus
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+
+Outputs:
+  OutputLogBucket:
+    Description: 'Name of Log Bucket'
+    Value: !Ref LogBucket
+    Export:
+      Name: LogBucket
+  OutputLambdaBucket:
+    Description: 'Name of Lambda Bucket'
+    Value: !Ref LambdaBucket
+    Export:
+      Name: LambdaBucket
