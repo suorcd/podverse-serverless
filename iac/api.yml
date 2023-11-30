@@ -13,11 +13,11 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: !Sub CodeBucket
-        S3Key: !Sub LambdaZip
+        S3Bucket: !ImportValue LambdaBucket
+        S3Key: !Ref LambdaZip
       Handler: index.handler
       Role: !GetAtt LambdaFunctionRole.Arn
-      Runtime: !Sub LabmdaRuntime
+      Runtime: !Ref LabmdaRuntime
 
   # Creates a single-route (wildcard) HTTP API for our Lambda function.
   HttpApi:
@@ -80,7 +80,7 @@ Resources:
   LambdaBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref LambdaBucket
+      Bucket: !ImportValue LambdaBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -90,7 +90,9 @@ Resources:
             Effect: "Allow"
             Principal:
               AWS: !GetAtt LambdaFunctionRole.Arn
-            Resource: !Sub "arn:aws:s3:::${LambdaBucket}/*"
+            Resource: !Sub
+              - 'arn:aws:s3:::${s3Bucket}/*'
+              - s3Bucket: !ImportValue LambdaBucket
 
   # Allows API Gateway to call our Lambda function.
   HandlerLambdaPermissionHttpApi:
